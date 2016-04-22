@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reproducible data pre-processing of Shiny app</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Reproducible data pre-processing of Shiny app">
+  <meta name="author" content="Edem Dossou">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Reproducible data pre-processing of Shiny app</h1>
+    <h2>Housing Affordability Data</h2>
+    <p>Edem Dossou<br/>Aspiring Data Scientist</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>OVERVIEW</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol class = "build incremental">
+<li>Importance of data pre-processing for predictive modeling</li>
+<li>Housing Affordability Data</li>
+<li>Data Pre-processing</li>
+<li>Data Pre-processing</li>
+<li>Shiny app</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Importance of data pre-processing for predictive modeling</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol class = "build incremental">
+<li>Data pre-processing is critical for predictive modeling exercises. However,</li>
+<li>It must be done taking into account the type of data being modeled</li>
+<li>It involves dealing with missing values, data normalization - centering and scaling</li>
+<li>Some of the techniques involve dealing with each predictor separately</li>
+<li>Other techniques deal with predictors all at once</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Housing Affordability Data</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol class = "build incremental">
+<li>The data used is from the U.S department of Housing and Urban Development website</li>
+<li>It&#39;s the Housing Affordability data derived from the American Housing Survey</li>
+<li>More info can be found here - <a href="https://www.huduser.gov/portal/datasets/hads/hads.html">https://www.huduser.gov/portal/datasets/hads/hads.html</a></li>
+<li>The response is the yearly house cost</li>
+<li>The predictors are age, income, number of bedrooms</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Data Pre-processing</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">#load required libraries
+pacman::p_load(dplyr,funModeling,caret,data.table,rpart,randomForest,rattle, 
+               ggplot2, gridExtra,shiny,DT)
+
+#import the data
+download.file(&quot;https://www.huduser.gov/portal/datasets/hads/hads2013n_ASCII.zip&quot;,
+              destfile = &quot;housing_data.zip&quot;)
+#unzip file
+unzip(&quot;housing_data.zip&quot;)
+#read the data
+data &lt;- read.table(&quot;thads2013n.txt&quot;, sep = &quot;,&quot;, header = TRUE)
+#rename variables to lower case
+names(data) &lt;- tolower(names(data))
+#select variables of interest
+data &lt;- as.data.table(data) %&gt;% select(costmed, totsal, bedrms, age1, built) 
+#scaling the housing cost to yearly cost for comparison prupose to yearly income
+data[, scale_cost := costmed * 12]
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Data Pre-processing</h2>
+  </hgroup>
+  <article data-timings="">
+    <pre><code class="r">#remove values that are less than or equal to zero
+data &lt;- data[(apply(data, 1, function(x) all(x &gt; 0)))]
+
+#subset to get houses built post 2009
+dt &lt;- data %&gt;% filter(built &gt;= 2010)
+
+#get the overall status of the data. The status resulted in a missing values free 
+#data. Also no zero values in the data
+dt_status &lt;- df_status(dt)
+</code></pre>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:;">
+  <hgroup>
+    <h2>Shiny app</h2>
+  </hgroup>
+  <article data-timings="">
+    <ol class = "build incremental">
+<li>Tool to visualize the end product of my analysis</li>
+<li>Shows the train models summary -recursive partition regression trees, random forest, and the generalized boosted model algorithms </li>
+<li>Random Forest was the winning model</li>
+<li>Test sets are included to test the final model</li>
+<li>Shows scatterplot of observed vs predicted housing costs</li>
+</ol>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='OVERVIEW'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Importance of data pre-processing for predictive modeling'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Housing Affordability Data'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Data Pre-processing'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Data Pre-processing'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='Shiny app'>
+         6
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
